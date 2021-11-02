@@ -12,12 +12,11 @@ function task1()
 {
     global $data;
     $db = dbconnect();
-    createBarcode($db);
-    if (checkSecondAPI($data)) {
-        saveOrder($data, $db);
+    if(createBarcode($db)) {
+        if (checkSecondAPI($data)) {
+            saveOrder($data, $db);
+        }
     }
-
-
 
 }
 function dbconnect($dbname="test", $host="localhost", $username="root", $pass="root"): PDO
@@ -33,10 +32,6 @@ function createBarcode($db)
     do {
         // Генерируем код
         $number = random_int(100, 99999999);
-        if (checkFirstAPI($number)) {
-            return 0;
-        }
-        echo $number;
         // Проверяем в БД
         $sth = $db->prepare("SELECT * FROM `test`.`barcodes` WHERE `barcode` = ?");
         $sth->execute(array($number));
@@ -49,8 +44,12 @@ function createBarcode($db)
         }
     } while ($cont === true);
     // Сохранение уникального кода
-    $sth = $db->prepare("INSERT INTO `test`.`barcodes` SET `barcode` = ?");
-    $sth->execute(array($number));
+    if (checkFirstAPI($number)) {
+        $sth = $db->prepare("INSERT INTO `test`.`barcodes` SET `barcode` = ?");
+        $sth->execute(array($number));
+        return true;
+    }
+
 }
 
 function checkFirstAPI($barcode): bool
@@ -64,10 +63,9 @@ function checkFirstAPI($barcode): bool
 
     $response= curl_exec($ch);
     curl_close($ch);
-    $json = '{message": "order successfully booked"}';
+    $json = '{"message": "order successfully booked"}';
     $res = json_decode($json, true);
 //    $res = json_decode($response, true);
-    echo 1;
     return ($res['message'] == "order successfully booked");
 }
 
