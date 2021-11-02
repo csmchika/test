@@ -11,10 +11,10 @@ $data['ticket_kid_quantity'] = $_POST['ticket_kid_quantity'];
 function task1()
 {
     global $data;
-    createBarcode(dbconnect());
+    $db = dbconnect();
+    createBarcode($db);
     if (checkSecondAPI($data)) {
-        print_r($data);
-//        saveOrder();
+        saveOrder($data, $db);
     }
 
 
@@ -85,10 +85,38 @@ function checkSecondAPI($barcode): bool
     echo 2;
     return ($res['message'] == "order successfully aproved");
 }
+//(:data['event_id'], :data['ticket_adult_price'], :data['ticket_kid_price'], :data['event_date'])");
+//function saveOrder($data, $db)
+//{
+//    $sth = $db->prepare("INSERT INTO `test`.`events`
+//        (`event_id`, `ticket_adult_price`, `ticket_kid_price`, `event_date`)
+//    VALUES
+//        (:event_id, :ticket_adult_price, :ticket_kid_price, :event_date)");
+//    $sth->bindParam(':event_id', $data['event_id']);
+//    $sth->bindParam(':ticket_adult_price', $data['ticket_adult_price']);
+//    $sth->bindParam(':ticket_kid_price', $data['ticket_kid_price']);
+//    $sth->bindParam(':event_date', $data['event_date']);
+//    $sth->execute();
+//
+//}
+function saveOrder($data, $db) {
+    $sth = $db->prepare("INSERT INTO `test`.`orders` 
+        (`event_id`, `event_date`, `ticket_adult_price`, `ticket_adult_quantity`, `ticket_kid_price`, `ticket_kid_quantity`, `barcode`, `user_id`, `equal_price`) 
+    VALUES 
+        (:event_id, :event_date, :ticket_adult_price, :ticket_adult_quantity, :ticket_kid_price, :ticket_kid_quantity, :barcode, :user_id, :equal_price)");
+    $equal = ($data['ticket_adult_price'] * $data['ticket_adult_quantity'] + $data['ticket_kid_price'] * $data['ticket_kid_quantity']);
+    $sth->execute(array(
+        ':event_id' => $data['event_id'],
+        ':event_date' => $data['event_date'],
+        ':ticket_adult_price' => $data['ticket_adult_price'],
+        ':ticket_adult_quantity' => $data['ticket_adult_quantity'],
+        ':ticket_kid_price' => $data['ticket_kid_price'],
+        ':ticket_kid_quantity' => $data['ticket_kid_quantity'],
+        ':barcode' => $data['barcode'],
+        ':user_id' => '1123',
+        ':equal_price' => $equal
 
-function saveOrder($event_id, $event_date, $ticket_adult_price, $ticket_adult_quantity, $ticket_kid_price, $ticket_kid_quantity, $barcode, $db)
-{
-
+    ));
 }
 try {
     task1();
