@@ -5,6 +5,11 @@
     <input type="number" name="ticket_adult_quantity" placeholder="ticket_adult_quantity"><br>
     <input type="number" name="ticket_kid_price" placeholder="ticket_kid_price"><br>
     <input type="number" name="ticket_kid_quantity" placeholder="ticket_kid_quantity"><br>
+    <select id="selectCategory" name="category">
+        <option value="normal">Обычный</option>
+        <option value="exemption">Льготный</option>
+        <option value="group">Групповой</option>
+    </select>
     <input type="submit" value="Отправить в функцию">
 </form>
 <?php

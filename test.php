@@ -80,7 +80,6 @@ function checkSecondAPI($barcode): bool
     $json = '{"message": "order successfully aproved"}';
     $res = json_decode($json, true);
 //    $res = json_decode($response, true);
-    echo 2;
     return ($res['message'] == "order successfully aproved");
 }
 //(:data['event_id'], :data['ticket_adult_price'], :data['ticket_kid_price'], :data['event_date'])");
@@ -97,12 +96,23 @@ function checkSecondAPI($barcode): bool
 //    $sth->execute();
 //
 //}
+/**
+ * @throws Exception
+ */
 function saveOrder($data, $db) {
+    $data['category'] = $_POST['category'];
+    print_r($data['category']);
     $sth = $db->prepare("INSERT INTO `test`.`orders` 
-        (`event_id`, `event_date`, `ticket_adult_price`, `ticket_adult_quantity`, `ticket_kid_price`, `ticket_kid_quantity`, `barcode`, `user_id`, `equal_price`) 
+        (`event_id`, `event_date`, `ticket_adult_price`, `ticket_adult_quantity`, `ticket_kid_price`, `ticket_kid_quantity`, `barcode`, `user_id`, `equal_price`, `category`) 
     VALUES 
-        (:event_id, :event_date, :ticket_adult_price, :ticket_adult_quantity, :ticket_kid_price, :ticket_kid_quantity, :barcode, :user_id, :equal_price)");
+        (:event_id, :event_date, :ticket_adult_price, :ticket_adult_quantity, :ticket_kid_price, :ticket_kid_quantity, :barcode, :user_id, :equal_price, :category)");
     $equal = ($data['ticket_adult_price'] * $data['ticket_adult_quantity'] + $data['ticket_kid_price'] * $data['ticket_kid_quantity']);
+    $number = $data['ticket_adult_quantity'] + $data['ticket_kid_quantity'];
+    if ($data['category'] == "exemption") {
+        $equal *= 0.9;
+    } elseif ($data['category'] == "group") {
+        $equal *= 0.8;
+    }
     $sth->execute(array(
         ':event_id' => $data['event_id'],
         ':event_date' => $data['event_date'],
@@ -112,9 +122,19 @@ function saveOrder($data, $db) {
         ':ticket_kid_quantity' => $data['ticket_kid_quantity'],
         ':barcode' => $data['barcode'],
         ':user_id' => '1123',
-        ':equal_price' => $equal
+        ':equal_price' => $equal,
+        ':category' => $data['category']
 
     ));
+    for ($i=0; $i < $number; $i++) {
+        $stH = $db->prepare("INSERT INTO `barcodes_group` 
+        (`barcode_main`, `barcode_group`) 
+    VALUES 
+        (:barcode_main, :barcode_generate)");
+        $stH->execute(array(
+            ':barcode_main' => $data['barcode'],
+            ':barcode_generate' => strval(random_int(100, 99999999))));
+    }
 }
 try {
     task1();
